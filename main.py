@@ -1,5 +1,6 @@
 import hashlib
 from fastmcp import FastMCP
+from fastmcp.server.dependencies import get_http_request
 
 EMAIL = "22f3002941@ds.study.iitm.ac.in"
 mcp = FastMCP("exam-mcp-server")
@@ -7,8 +8,7 @@ mcp = FastMCP("exam-mcp-server")
 
 @mcp.tool(name="solve_challenge")
 async def solve_challenge() -> str:
-    ctx = mcp.get_context()
-    request = getattr(ctx, "request", None)
+    request = get_http_request()  # Starlette Request for the current call
     if request is None:
         raise RuntimeError("HTTP request context not available")
 
