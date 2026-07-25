@@ -1,30 +1,24 @@
 import hashlib
-from typing import Any
-
 from fastmcp import FastMCP
-from starlette.requests import Request
 
 EMAIL = "22f3002941@ds.study.iitm.ac.in"
-
 mcp = FastMCP("exam-mcp-server")
 
 
-def _challenge_from_request_context() -> str:
+@mcp.tool(name="solve_challenge")
+async def solve_challenge() -> str:
     ctx = mcp.get_context()
     request = getattr(ctx, "request", None)
     if request is None:
-        raise ValueError("No HTTP request context available")
+        raise RuntimeError("HTTP request context not available")
+
     challenge = request.headers.get("x-exam-challenge")
     if not challenge:
-        raise ValueError("Missing X-Exam-Challenge header")
-    return challenge
+        raise RuntimeError("Missing X-Exam-Challenge header")
 
-
-@mcp.tool(name="solve_challenge")
-def solve_challenge() -> str:
-    challenge = _challenge_from_request_context().strip()
     normalized_email = EMAIL.strip().lower()
-    return hashlib.sha256(f"{challenge}:{normalized_email}".encode("utf-8")).hexdigest()[:16]
+    digest = hashlib.sha256(f"{challenge}:{normalized_email}".encode("utf-8")).hexdigest()
+    return digest[:16]
 
 
 if __name__ == "__main__":
